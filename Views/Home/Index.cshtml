@@ -1,0 +1,129 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "ProxyServer";
+}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <style>
+        #session_list div {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .info{display:none}
+        .active .info{display:block}
+    </style>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container card">
+        <div class="col-md-10"></div>
+            <div class="card-body">
+                <form onsubmit="search();return false" class="form-inline row">
+                    <div class="col-md-3"> <label for="url">地址：</label> <input class="form-control input-sm" id="url" name="url" type="text" /></div>
+                    <div class="col-md-3">
+                        <label for="host">主机：</label><input class="form-control input-sm" id="host" name="host" type="text" />
+                    </div>
+                    <div class="col-md-3"> <label for="process">进程：</label><input class="form-control input-sm" id="process" name="process" type="text" /></div>
+                    <div class="col-md-3">
+                        <input type="submit" class="btn btn-primary btn-sm" value="过滤" />
+                            <a asp-action="exit" class="btn btn-primary btn-sm">关闭服务</a>
+                        </div>
+</form>
+                <div class="bg-info row" style="border-bottom:1px solid #666">
+                    <div class="col-md-1">#</div>
+                    <div class="col-md-1">状态</div>
+                    <div class="col-md-1">协议</div>
+                    <div class="col-md-5">路径</div>
+                    <div class="col-md-2">主机</div>
+                    <div class="col-md-2">进程</div>
+                </div>
+                <div id="session_list"></div>
+
+            </div>
+
+            <button onclick="page++; search()">下一页</button>
+            <button onclick="page--; search()">上一页</button>
+        </div>
+    <script id="tp_row" type="text/x-template">
+        <div class="bg-{color} row">
+            <div class="col-md-1">{number}</div>
+            <div class="col-md-1">{statusCode}</div>
+            <div class="col-md-1">{protocol}</div>
+            <div class="col-md-5">{url}</div>
+            <div class="col-md-2">{host}</div>
+            <div class="col-md-2">{process}</div>
+            <div class="col-md-12 info row"></div>
+        </div>
+    </script>
+    <script id="tp_info" type="text/x-template">
+        <a href="javascript:;" onclick="$(this).parent().parent().toggleClass('active');" class="btn btn-primary btn-sm">关闭</a>
+        <p class="col-md-12"><b>{url}</b></p>
+        <p class="col-md-12">requestHeader:</p>
+        <textarea class="col-md-12" rows="12">{requestHeader}</textarea>
+        <p class="col-md-12">requestBody:</p>
+        <textarea class="col-md-12" rows="12">{requestBody}</textarea>
+
+        <p class="col-md-12">responseHeaderText:</p>
+        <textarea class="col-md-12" rows="12">{responseHeaderText}</textarea>
+        <p class="col-md-12">responseBody:</p>
+        <textarea class="col-md-12" rows="12">{responseBody}</textarea>
+    </script>
+    <script>
+        var page = 1
+        function search() {
+            $.ajax({
+                url: "/home/sessionlist",
+                data: 'page=' + page + '&' + $('form').serialize(),
+                type: 'POST',
+                success: function (res) {
+                    var html = '', template = $('#tp_row').html()
+                    for (var i = 0; i < res.length; i++) {
+                        var item = template
+                        res[i].color = res[i].statusCode == 200 ? 'success' : 'warning'
+                        for (var k in res[i]) {
+                            item = item.replace('\{' + k + '\}', res[i][k])
+                        }
+                        html += item
+                    }
+                    $('#session_list').html(html)
+                    window.scrollTo(0, 0)
+                    bindEvent()
+                }
+            })
+
+        }
+        function bindEvent() {
+            $('#session_list .row').click(function (e) {
+                if ($(e.target).hasClass('btn'))
+                    return
+                var $el = $(this)
+                if ($el.hasClass('active'))
+                    return
+                $el.toggleClass('active')
+                if ($el.hasClass('active')) {
+                    var template = $('#tp_info').html()
+                    var html = template
+                    $.ajax({
+                        url: "/home/info",
+                        data: { id: $el.find('div').first().text() },
+                        type: 'POST',
+                        success: function (res) {
+                            if (!res)
+                                return
+                            for (var k in res) {
+                                html = html.replace('\{' + k + '\}', res[k])
+                            }
+                            $el.find('.info').html(html)
+                        }
+                    })
+                }
+            })
+        }
+        search()
+    </script>
+</body>
+</html>
