@@ -30,7 +30,7 @@
                     <div class="col-md-3"> <label for="process">进程：</label><input class="form-control input-sm" id="process" name="process" type="text" /></div>
                     <div class="col-md-3">
                         <input type="submit" class="btn btn-primary btn-sm" value="过滤" />
-                            <a asp-action="exit" class="btn btn-primary btn-sm">关闭服务</a>
+                            <a  href="javascript:closeService();" class="btn btn-primary btn-sm">关闭服务</a>
                         </div>
 </form>
                 <div class="bg-info row" style="border-bottom:1px solid #666">
@@ -96,6 +96,18 @@
             })
 
         }
+        function closeService() {
+            document.body.innerHTML = "退出中..."
+            $.ajax({
+                url: "/home/exit",
+                type: 'POST',
+                success: function (res) {
+                    document.body.innerHTML = "已退出"
+                    window.close()
+                }
+            })
+        }
+
         function bindEvent() {
             $('#session_list .row').click(function (e) {
                 if ($(e.target).hasClass('btn'))

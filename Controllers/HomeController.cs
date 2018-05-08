@@ -13,7 +13,7 @@ namespace Server.Controllers
         {
             var result = !string.IsNullOrEmpty(url) || !string.IsNullOrEmpty(host) || !string.IsNullOrEmpty(url)
                 ? ProxyServerBootstrap.Sessions.Where(s => (string.IsNullOrEmpty(url) || s.Url.Contains(url)) && (string.IsNullOrEmpty(host) || s.Host.Contains(host)) && (string.IsNullOrEmpty(process) || s.Process.Contains(process))) : ProxyServerBootstrap.Sessions;
-            var pageSize = 50;
+            var pageSize = 45;
             return Json(result.Skip((page - 1) * pageSize).Take(pageSize).Select(s => new { s.Url, s.Process, s.Protocol, s.Number, s.Host, s.StatusCode, s.ReceivedDataCount, s.SentDataCount }));
         }
 
@@ -32,9 +32,9 @@ namespace Server.Controllers
 
         public IActionResult Exit()
         {
-            Task.Run(() =>
+            Task.Run(async () =>
             {
-                Program.Host.StopAsync().RunSynchronously();
+                await Program.Host.StopAsync();
             });
             return Content("Exting ...");
         }
