@@ -154,6 +154,11 @@ namespace Server
         {
             if (e.WebSession.Request.Url.StartsWith(WebServerUrl))
                 return null;
+            if (Sessions.Count > 500)
+            {
+                Sessions.Clear();
+                sessionDictionary.Clear();
+            }
             var item = CreateSessionListItem(e);
             Sessions.Add(item);
             if (!sessionDictionary.ContainsKey(e.WebSession))
